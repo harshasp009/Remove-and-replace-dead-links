@@ -76,24 +76,33 @@ class removeDeadLinks extends FormBase {
 
   public function _remove_links($link_url) {
     $nids = _get_node_body($link_url);
-    $msg = _get_body_value($nids,$link_url);
-    if($msg) {
-      $data_message = "successfully remove the dead links";
-    } else {
-      $data_message = "Error occured";
-    }
-    drupal_set_message($data_message);
+    $batch = array(
+     'title' => t('Removing Broken Links'),
+     'operations' => array(
+      array(
+       '\Drupal\remove_dead_links\rrLinkBatch::removeDeadLinksBatch',
+       array($nids,$link_url)
+      ),
+     ),
+     'finished' => '\Drupal\remove_dead_links\rrLinkBatch::removeDeadLinksBatchFinishedCallback',
+    );
+    batch_set($batch);
 
   }
 
   public function _replace_link($link_url, $replace_url) {
     $nids = _get_node_body($link_url);
-    $replaced_content = _replace_links($nids,$link_url,$replace_url);
-    if($replaced_content) {
-      $data_message = "successfully Replaced the links";
-    } else {
-      $data_message = "error occured.";
-    }
-    drupal_set_message($data_message);
+    $batch = array(
+     'title' => t('Replace Links'),
+     'operations' => array(
+      array(
+       '\Drupal\remove_dead_links\rrLinkBatch::replaceLinkBatch',
+       array($nids,$link_url,$replace_url)
+      ),
+     ),
+     'finished' => '\Drupal\remove_dead_links\rrLinkBatch::replaceLinkBatchFinishedCallback',
+    );
+    batch_set($batch);
+
     }
 }
