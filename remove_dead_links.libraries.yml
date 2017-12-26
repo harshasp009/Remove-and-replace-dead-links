@@ -1,0 +1,6 @@
+rr_dead_links:
+  version: 1
+  js:
+    js/remove_dead_links.js: {}
+  dependencies:
+      - core/jquery

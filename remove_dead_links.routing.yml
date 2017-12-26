@@ -1,0 +1,7 @@
+remove_dead_links.admin:
+  path: '/admin/structure/rr_links'
+  defaults:
+    _title: 'Remove and replace dead links'
+    _form: '\Drupal\remove_dead_links\Form\removeDeadLinks'
+  requirements:
+    _permission: 'administer Remove and replace dead links  '

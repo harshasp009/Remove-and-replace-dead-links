@@ -1,0 +1,5 @@
+name: Remove and Replace Dead Links
+type: module
+description: This will remove all the dead links in contents, replace broken links in the comment and replace the links.
+core: 8.x
+package: Remove and Replace Dead Links

@@ -1,0 +1,5 @@
+remove_dead_links.admin:
+  title: 'Remove and Replace Dead Links'
+  description: 'It remove and replace dead links in the content'
+  parent: system.admin_structure
+  route_name: remove_dead_links.admin

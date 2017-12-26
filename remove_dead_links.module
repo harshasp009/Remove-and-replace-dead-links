@@ -1,0 +1,107 @@
+<?php
+
+use Drupal\node\Entity\Node;
+use Drupal\Core\Database\Database;
+use Drupal\node\NodeInterface;
+
+function _get_node_body($link_url) {
+  $connection = Database::getConnection();
+  $sql = "select entity_id from node__body where body_value LIKE '%$link_url%'";
+  $result = $connection->query($sql);
+  $results = $result->fetchAll();
+  $nids = [];
+  foreach($results as $data) {
+    $nids[] = $data->entity_id;
+  }
+  return $nids;
+}
+
+function _get_body_value($nids,$link_url) {
+  foreach($nids as $nid) {
+    $node = Node::load($nid);
+    $body = $node->get('body')->getValue();
+    $data = $body[0]['value'];
+    $data_format = $body[0]['format'];
+    $str = _check_dead_links($data,$link_url);
+    if(!empty($str)) {
+      $node_update = Node::load($nid);
+      $node_update->set('body', $str);
+      $node_update->body->format = $data_format;
+      $node_save = $node_update->save();
+    }
+    if($node_save == 2) {
+      $message = TRUE;
+    } else {
+      $message = FALSE;
+    }
+    return $message;
+  }
+}
+
+function _replace_links($nids,$link_url,$replace_link) {
+  foreach($nids as $nid) {
+    $node = Node::load($nid);
+    $body = $node->get('body')->getValue();
+    $data = $body[0]['value'];
+    $data_format = $body[0]['format'];
+    $str = str_replace($link_url,$replace_link,$data);
+    if(!empty($str)) {
+      $node_update = Node::load($nid);
+      $node_update->set('body', $str);
+      $node_update->body->format = $data_format;
+      $node_save = $node_update->save();
+    }
+    if($node_save == 2) {
+      $message = TRUE;
+    } else {
+      $message = FALSE;
+    }
+    return $message;
+  }
+}
+
+function _check_dead_links($body,$link_url) {
+  $pattern = "/(?<=href=(\"|'))[^\"']+(?=(\"|'))/";
+  $pattern1 = '#<a.*?>(.*?)</a>#i';
+  preg_match_all($pattern1, $body,$output);
+  $arr = array();
+  $arrlink = array();
+  foreach ($output as $data){
+    foreach($data as $row){
+      preg_match_all($pattern,$row,$linkoutput);
+      foreach($linkoutput as $linkmatch){
+        foreach($linkmatch as $item){
+          $remhttp = remove_http($item);
+          if(strcasecmp($remhttp,$link_url) == 0){
+            $arrlink[] = $row;
+          }
+        }
+      }
+    }
+  }
+  foreach($arrlink as $match) {
+    $linkreplace = preg_replace ('#<a.*?>(.*?)</a>#i', '\1', $match);
+    $arr[] = $linkreplace;
+  }
+  $outputs = str_replace ($arrlink, $arr, $body);
+  if(!empty($outputs)) {
+    $output_content = $outputs;
+  } else {
+    $output_content = $body;
+  }
+return $output_content;
+}
+
+function remove_http($url) {
+  $disallowed = array('http://', 'https://');
+  foreach($disallowed as $d) {
+    if(strpos($url, $d) === 0) {
+      return str_replace($d, '', $url);
+    }
+  }
+  return $url;
+}
+
+function remove_dead_links_page_attachments(array &$attachments) {
+  $attachments['#attached']['library'][] = 'remove_dead_links/rr_dead_links';
+}
